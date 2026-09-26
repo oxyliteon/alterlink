@@ -54,12 +54,15 @@
         async function fetchLinks() {
             const container = document.getElementById('links-container');
             try {
-                // Menggunakan RPC untuk memotong cache schema
-                const { data, error } = await supabase.rpc('get_active_links');
+                const { data, error } = await supabase.from('alternative_links').select('*').order('urutan', { ascending: true });
 
-                if (error) throw error;
+                if (error) {
+                    container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans">Error DB: ${error.message}</p>`;
+                    return;
+                }
+                
                 if (!data || data.length === 0) {
-                    container.innerHTML = `<p class="px-4 py-4 text-sm text-slate-500 text-center font-sans">Belum ada link.</p>`;
+                    container.innerHTML = `<p class="px-4 py-4 text-sm text-slate-500 text-center font-sans">Belum ada link yang ditambahkan.</p>`;
                     return;
                 }
 
@@ -74,7 +77,7 @@
                     `;
                 });
             } catch (err) {
-                container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans">Koneksi DB Gagal.</p>`;
+                container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans">Koneksi Gagal.</p>`;
             }
         }
 
@@ -85,9 +88,8 @@
             const midnight = new Date(now);
             midnight.setHours(24, 0, 0, 0); 
             const diff = midnight - now;
-
             if (diff <= 0) { window.location.reload(); return; }
-
+            
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / 1000 / 60) % 60);
             const s = Math.floor((diff / 1000) % 60);
@@ -96,7 +98,6 @@
             document.getElementById('minutes').innerText = String(m).padStart(2, '0');
             document.getElementById('seconds').innerText = String(s).padStart(2, '0');
         }
-
         updateCountdown();
         setInterval(updateCountdown, 1000);
     </script>
