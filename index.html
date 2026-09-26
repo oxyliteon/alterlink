@@ -21,20 +21,23 @@
     
     <div class="max-w-md w-full bg-white/70 backdrop-blur-2xl p-8 rounded-[2rem] border border-white shadow-[0_8px_32px_rgba(0,0,0,0.04)] text-center relative overflow-hidden">
         
+        <!-- Efek Cahaya Belakang -->
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl -z-10"></div>
         
+        <!-- Ikon Alert -->
         <div class="w-16 h-16 mx-auto mb-6 bg-white/80 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center">
             <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
         </div>
         
+        <!-- Pesan Utama -->
         <h1 class="text-2xl font-semibold text-slate-900 mb-2 tracking-tight">Kuota Hari Ini Penuh</h1>
         <p class="text-slate-500 mb-8 leading-relaxed text-sm">
             Maksimal batas pengunjung untuk sesi ini telah tercapai. Akses akan dibuka kembali secara otomatis dalam:
         </p>
 
-        <!-- Countdown -->
+        <!-- Hitung Mundur -->
         <div class="flex justify-center gap-3 mb-10">
             <div class="bg-white/60 border border-slate-200/60 rounded-2xl p-3 w-20 shadow-sm backdrop-blur-md">
                 <div id="hours" class="text-2xl text-slate-800 tracking-tight">00</div>
@@ -63,35 +66,49 @@
     </div>
 
     <script>
-        // Logika Supabase
+        // Kredensial Supabase Asli
         const supabaseUrl = 'https://bnllplehnadtksnuzbtq.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubGxwbGVobmFkdGtzbnV6YnRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDc5NzgsImV4cCI6MjEwMDYyMzk3OH0.3U5B08_hEWEMZZGblRljL5hesk2pLsdNoCiqBu-hpPk';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         async function fetchLinks() {
             const container = document.getElementById('links-container');
-            const { data, error } = await supabase
-                .from('alternative_links')
-                .select('*')
-                .order('urutan', { ascending: true });
+            
+            try {
+                const { data, error } = await supabase
+                    .from('alternative_links')
+                    .select('*')
+                    .order('urutan', { ascending: true });
 
-            if (error) {
-                container.innerHTML = '<p class="px-4 py-3 text-sm text-red-400">Gagal memuat link.</p>';
-                return;
+                // Jika error dari Supabase (misal tabel belum ada atau RLS salah)
+                if (error) {
+                    container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans font-bold">Error DB: ${error.message}</p>`;
+                    return;
+                }
+
+                // Jika tabel masih kosong
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<p class="px-4 py-4 text-sm text-slate-500 text-center font-sans">Belum ada link yang ditambahkan.</p>`;
+                    return;
+                }
+
+                // Render Data jika berhasil
+                container.innerHTML = '';
+                data.forEach((item, index) => {
+                    const borderClass = index === data.length - 1 ? '' : 'border-b border-slate-200/50';
+                    const linkHTML = `
+                        <a href="${item.url}" target="_blank" class="flex items-center justify-between px-4 py-3 bg-transparent hover:bg-white/60 active:bg-slate-100 transition-colors ${borderClass}">
+                            <span class="text-base text-slate-700">${item.judul}</span>
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    `;
+                    container.innerHTML += linkHTML;
+                });
+
+            } catch (err) {
+                // Menangkap error koneksi (misal project dipause oleh Supabase)
+                container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans font-bold">Koneksi Gagal: ${err.message}</p>`;
             }
-
-            container.innerHTML = '';
-            data.forEach((item, index) => {
-                const borderClass = index === data.length - 1 ? '' : 'border-b border-slate-200/50';
-                
-                const linkHTML = `
-                    <a href="${item.url}" target="_blank" class="flex items-center justify-between px-4 py-3 bg-transparent hover:bg-white/60 active:bg-slate-100 transition-colors ${borderClass}">
-                        <span class="text-base text-slate-700">${item.judul}</span>
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </a>
-                `;
-                container.innerHTML += linkHTML;
-            });
         }
 
         fetchLinks();
