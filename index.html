@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Belleza&display=swap" rel="stylesheet">
     <style>body { font-family: 'Belleza', sans-serif; }</style>
 </head>
-<body class="bg-[#F2F2F7] text-slate-800 min-h-screen flex items-center justify-center p-6 antialiased">
+<body class="bg-[#F2F2F7] text-slate-800 min-h-screen flex flex-col items-center justify-center p-6 antialiased">
     
     <div class="max-w-md w-full bg-white/70 backdrop-blur-2xl p-8 rounded-[2rem] border border-white shadow-[0_8px_32px_rgba(0,0,0,0.04)] text-center relative overflow-hidden">
         <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl -z-10"></div>
@@ -42,18 +42,26 @@
         
         <div class="text-left bg-white/50 border border-slate-200/50 rounded-2xl overflow-hidden shadow-sm backdrop-blur-md">
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-4 pt-4 pb-2 font-sans">Jelajahi Alternatif</p>
-            <div id="links-container"><p class="px-4 py-4 text-sm text-slate-400 text-center animate-pulse">Memuat link...</p></div>
+            <div id="links-container"><p class="px-4 py-4 text-sm text-slate-400 text-center animate-pulse">Menyiapkan koneksi...</p></div>
         </div>
     </div>
+    
+    <!-- Penanda Cache (Biar kita tahu ini kode baru) -->
+    <div class="mt-6 text-[10px] text-slate-400 tracking-widest font-sans uppercase">UI v2.1 (Sync Mode)</div>
 
     <script>
         const supabaseUrl = 'https://bnllplehnadtksnuzbtq.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubGxwbGVobmFkdGtzbnV6YnRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDc5NzgsImV4cCI6MjEwMDYyMzk3OH0.3U5B08_hEWEMZZGblRljL5hesk2pLsdNoCiqBu-hpPk';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
+        
         async function fetchLinks() {
             const container = document.getElementById('links-container');
             try {
+                // Memastikan Supabase sudah terload sempurna oleh browser
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error("Library database belum siap");
+                }
+
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
                 const { data, error } = await supabase.from('alternative_links').select('*').order('urutan', { ascending: true });
 
                 if (error) throw error;
@@ -74,11 +82,9 @@
                     `;
                 });
             } catch (err) {
-                container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans">Koneksi Gagal.</p>`;
+                container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans">Koneksi Gagal: ${err.message}</p>`;
             }
         }
-
-        fetchLinks();
 
         function updateCountdown() {
             const now = new Date();
@@ -97,8 +103,12 @@
             document.getElementById('seconds').innerText = String(s).padStart(2, '0');
         }
         
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
+        // JARING PENGAMAN: Tunggu seluruh halaman & script terload sebelum mengeksekusi
+        window.onload = () => {
+            fetchLinks();
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        };
     </script>
 </body>
 </html>
