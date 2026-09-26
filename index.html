@@ -3,66 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Deteksi Live</title>
+    <title>Batas Pengunjung Tercapai</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Belleza&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Belleza', sans-serif; }</style>
 </head>
-<body class="bg-slate-100 min-h-screen p-6 font-sans">
+<body class="bg-[#F2F2F7] text-slate-800 min-h-screen flex items-center justify-center p-6 antialiased">
     
-    <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
-        <h1 class="text-xl font-bold text-slate-800 mb-4 border-b pb-2">Status Live GitHub Pages</h1>
+    <div class="max-w-md w-full bg-white/70 backdrop-blur-2xl p-8 rounded-[2rem] border border-white shadow-[0_8px_32px_rgba(0,0,0,0.04)] text-center relative overflow-hidden">
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-400/20 rounded-full blur-3xl -z-10"></div>
         
-        <!-- Layar Monitor Deteksi -->
-        <div id="monitor" class="bg-slate-900 text-green-400 font-mono text-sm p-4 rounded-lg min-h-[150px] space-y-2 mb-6 break-words">
-            <p class="text-white">Memulai sistem deteksi...</p>
+        <div class="w-16 h-16 mx-auto mb-6 bg-white/80 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center">
+            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </div>
+        
+        <h1 class="text-2xl font-semibold text-slate-900 mb-2 tracking-tight">Kuota Hari Ini Penuh</h1>
+        <p class="text-slate-500 mb-8 leading-relaxed text-sm">Maksimal batas pengunjung untuk sesi ini telah tercapai. Akses akan dibuka kembali secara otomatis dalam:</p>
 
-        <div id="hasil-akhir" class="space-y-2"></div>
+        <div class="flex justify-center gap-3 mb-10">
+            <div class="bg-white/60 border border-slate-200/60 rounded-2xl p-3 w-20 shadow-sm backdrop-blur-md">
+                <div id="hours" class="text-2xl text-slate-800 tracking-tight">00</div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 font-sans">Jam</div>
+            </div>
+            <div class="text-2xl text-slate-400 mt-2">:</div>
+            <div class="bg-white/60 border border-slate-200/60 rounded-2xl p-3 w-20 shadow-sm backdrop-blur-md">
+                <div id="minutes" class="text-2xl text-slate-800 tracking-tight">00</div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 font-sans">Mnt</div>
+            </div>
+            <div class="text-2xl text-slate-400 mt-2">:</div>
+            <div class="bg-white/60 border border-slate-200/60 rounded-2xl p-3 w-20 shadow-sm backdrop-blur-md">
+                <div id="seconds" class="text-2xl text-blue-500 tracking-tight">00</div>
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 font-sans">Dtk</div>
+            </div>
+        </div>
+        
+        <div class="text-left bg-white/50 border border-slate-200/50 rounded-2xl overflow-hidden shadow-sm backdrop-blur-md">
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-4 pt-4 pb-2 font-sans">Jelajahi Alternatif</p>
+            <div id="links-container"><p class="px-4 py-4 text-sm text-slate-400 text-center animate-pulse">Memuat link...</p></div>
+        </div>
     </div>
 
     <script>
-        const monitor = document.getElementById('monitor');
-        const hasil = document.getElementById('hasil-akhir');
+        const supabaseUrl = 'https://bnllplehnadtksnuzbtq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubGxwbGVobmFkdGtzbnV6YnRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDc5NzgsImV4cCI6MjEwMDYyMzk3OH0.3U5B08_hEWEMZZGblRljL5hesk2pLsdNoCiqBu-hpPk';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        function logStatus(pesan, warna = 'text-green-400') {
-            monitor.innerHTML += `<p class="${warna}">> ${pesan}</p>`;
-        }
-
-        async function jalankanTes() {
-            logStatus("✅ Kode HTML versi TERBARU berhasil dimuat oleh browser.");
-            
+        async function fetchLinks() {
+            const container = document.getElementById('links-container');
             try {
-                logStatus("⚙️ Menyiapkan kredensial Supabase...", "text-yellow-400");
-                const url = 'https://bnllplehnadtksnuzbtq.supabase.co';
-                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJubGxwbGVobmFkdGtzbnV6YnRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNDc5NzgsImV4cCI6MjEwMDYyMzk3OH0.3U5B08_hEWEMZZGblRljL5hesk2pLsdNoCiqBu-hpPk';
-                const sb = window.supabase.createClient(url, key);
+                const { data, error } = await supabase.from('alternative_links').select('*').order('urutan', { ascending: true });
+
+                if (error) throw error;
                 
-                logStatus("🚀 Mengirim request ke database (alternative_links)...", "text-blue-400");
-                
-                const { data, error } = await sb.from('alternative_links').select('*').order('urutan');
-                
-                if (error) {
-                    logStatus(`❌ ERROR DARI DATABASE: ${error.message}`, "text-red-500 font-bold");
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<p class="px-4 py-4 text-sm text-slate-500 text-center font-sans">Belum ada link alternatif.</p>`;
                     return;
                 }
-                
-                logStatus(`✅ Data diterima! Ditemukan ${data.length} link.`, "text-green-400 font-bold");
 
-                // Tampilkan hasilnya ke layar jika berhasil
-                data.forEach(item => {
-                    hasil.innerHTML += `
-                        <a href="${item.url}" class="block p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 font-semibold mb-2">
-                            ${item.judul}
+                container.innerHTML = '';
+                data.forEach((item, index) => {
+                    const borderClass = index === data.length - 1 ? '' : 'border-b border-slate-200/50';
+                    container.innerHTML += `
+                        <a href="${item.url}" target="_blank" class="flex items-center justify-between px-4 py-3 bg-transparent hover:bg-white/60 active:bg-slate-100 transition-colors ${borderClass}">
+                            <span class="text-base text-slate-700">${item.judul}</span>
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </a>
                     `;
                 });
-
             } catch (err) {
-                logStatus(`💥 CRASH FATAL: ${err.message}`, "text-red-500 bg-white p-1");
+                container.innerHTML = `<p class="px-4 py-4 text-sm text-red-500 text-center font-sans">Koneksi Gagal.</p>`;
             }
         }
 
-        setTimeout(jalankanTes, 1000);
+        fetchLinks();
+
+        function updateCountdown() {
+            const now = new Date();
+            const midnight = new Date(now);
+            midnight.setHours(24, 0, 0, 0); 
+            const diff = midnight - now;
+            
+            if (diff <= 0) { window.location.reload(); return; }
+            
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / 1000 / 60) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('hours').innerText = String(h).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(m).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(s).padStart(2, '0');
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>
